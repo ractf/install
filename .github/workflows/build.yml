@@ -1,9 +1,6 @@
 name: Build Release
 
-on:
-  push:
-    branches:
-      - master
+on: push
 
 jobs:
   release-linux-amd64:
@@ -31,6 +28,7 @@ jobs:
       run: go build
 
     - name: Create Release
+      if: github.ref == 'refs/heads/master'
       id: create_release
       uses: actions/create-release@v1
       env:
@@ -43,6 +41,7 @@ jobs:
         prerelease: false
 
     - name: Upload Output
+      if: github.ref == 'refs/heads/master'
       id: upload-output
       uses: actions/upload-release-asset@v1
       env:
