@@ -1,0 +1,49 @@
+name: Build Release
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  release-linux-amd64:
+    name: Generate Release
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Checkout Repository
+      uses: actions/checkout@master
+
+    - name: Setup Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: '1.14'
+
+    - name: Verify Go version
+      run: go version
+
+    - name: Build Install
+      run: go build
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.sha }}
+        release_name: Release ${{ github.sha }}
+        body: Automated release
+        draft: false
+        prerelease: false
+
+    - name: Upload Output
+      id: upload-output
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./install
+        asset_name: install
+        asset_content_type: application/octet-stream
