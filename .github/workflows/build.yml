@@ -14,6 +14,11 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@master
 
+    - uses: benjlevesque/short-sha@v1.1
+      id: short-sha
+      with:
+        length: 6
+
     - name: Setup Go
       uses: actions/setup-go@v2
       with:
@@ -31,8 +36,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ github.sha::8 }}
-        release_name: Release ${{ github.sha::8 }}
+        tag_name: ${{ steps.short-sha.outputs.sha }}
+        release_name: Release ${{ steps.short-sha.outputs.sha }}
         body: Automated release
         draft: false
         prerelease: false
