@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-
 	. "github.com/logrusorgru/aurora"
 	"github.com/manifoldco/promptui"
 )
@@ -16,6 +15,15 @@ func main() {
 		fmt.Println(Red("You must select at least one component to continue."))
 		return
 	}
+}
+
+func getIndex(haystack []string, needle string) int {
+	for i, val := range haystack {
+		if val == needle {
+			return i
+		}
+	}
+	return -1
 }
 
 func cumulativeSelect(prompt string, items []string) []string {
@@ -38,21 +46,14 @@ func cumulativeSelect(prompt string, items []string) []string {
 			break
 		}
 
-		if index == len(items) - 1 {
+		if index == len(items)-1 {
 			break
 		}
 
-		var removedFromSelected bool
-
-		for i, val := range selected {
-			if val == choice {
-				selected = append(selected[:i], selected[i+1:]...)
-				removedFromSelected = true
-				break
-			}
-		}
-		if !removedFromSelected {
+		if i := getIndex(selected, choice); i == -1 {
 			selected = append(selected, choice)
+		} else {
+			selected = append(selected[:i], selected[i+1:]...)
 		}
 	}
 
