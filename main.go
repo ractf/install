@@ -4,6 +4,7 @@ import (
 	"fmt"
 	. "github.com/logrusorgru/aurora"
 	"github.com/manifoldco/promptui"
+	"strings"
 )
 
 func main() {
@@ -11,32 +12,43 @@ func main() {
 
 	selectedComponents := cumulativeSelect("Which services would you like to install?", []string{"Andromeda", "Core", "Shell"})
 
-	if len(selectedComponents) == 0 {
-		fmt.Println(Red("You must select at least one component to continue."))
-		return
-	}
-}
-
-func getIndex(haystack []string, needle string) int {
-	for i, val := range haystack {
-		if val == needle {
-			return i
+	var installCount int
+	for _, v := range selectedComponents {
+		if v {
+			installCount += 1
 		}
 	}
-	return -1
+
+	if installCount == 0 {
+		fmt.Println(Red("You must select at least one service to continue."))
+		return
+	}
+	fmt.Println(Green("Proceeding with installation of"), Bold(installCount), Green("components."))
 }
 
-func cumulativeSelect(prompt string, items []string) []string {
-	var selected []string
+func cumulativeSelect(prompt string, items []string) map[string]bool {
+	selected := make(map[string]bool)
+	for _, v := range items {
+		selected[v] = false
+	}
 
 	items = append(items, "Confirm")
 
-	for index := 0; ; {
+	for {
+		var enabledList []string
+		for i, v := range selected {
+			if v {
+				enabledList = append(enabledList, i)
+			}
+		}
+		if len(enabledList) == 0 {
+			enabledList = []string{"[None]"}
+		}
+
 		prompt := promptui.Select{
-			Label:        fmt.Sprintf("%s (Currently selected: %s)", Yellow(prompt), selected),
+			Label:        fmt.Sprintf("%s (Currently selected: %s)", Yellow(prompt), strings.Join(enabledList, ", ")),
 			Items:        items,
 			HideSelected: true,
-			CursorPos:    index,
 		}
 
 		index, choice, err := prompt.Run()
@@ -50,11 +62,7 @@ func cumulativeSelect(prompt string, items []string) []string {
 			break
 		}
 
-		if i := getIndex(selected, choice); i == -1 {
-			selected = append(selected, choice)
-		} else {
-			selected = append(selected[:i], selected[i+1:]...)
-		}
+		selected[choice] = !selected[choice]
 	}
 
 	return selected
