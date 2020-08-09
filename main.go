@@ -10,7 +10,7 @@ import (
 func main() {
 	fmt.Println(Cyan("Welcome to the"), Bold("RACTF"), Cyan("setup script"))
 
-	selectedComponents := cumulativeSelect("Which services would you like to install?", []string{"Andromeda", "Core", "Shell", "Confirm"})
+	selectedComponents := cumulativeSelect("Which services would you like to install?", []string{"Andromeda", "Core", "Shell"})
 
 	if len(selectedComponents) == 0 {
 		fmt.Println(Red("You must select at least one component to continue."))
@@ -20,6 +20,8 @@ func main() {
 
 func cumulativeSelect(prompt string, items []string) []string {
 	var selected []string
+
+	items = append(items, "Confirm")
 
 	for index := 0; ; {
 		prompt := promptui.Select{
@@ -36,7 +38,7 @@ func cumulativeSelect(prompt string, items []string) []string {
 			break
 		}
 
-		if index == 3 {
+		if index == len(items) - 1 {
 			break
 		}
 
