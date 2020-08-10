@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	. "github.com/logrusorgru/aurora"
+	"github.com/markbates/pkger"
+	"io/ioutil"
 	"os"
 	"strings"
 	"text/template"
@@ -56,7 +58,16 @@ func main() {
 }
 
 func generateAndWriteDockerFile(options options) {
-	t, err := template.ParseFiles("docker-compose.tmpl")
+	tf, err := pkger.Open("/docker-compose.tmpl")
+	if err != nil {
+		fmt.Println(err)
+	}
+	templ, err := ioutil.ReadAll(tf)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	t, err := template.New("dockerCompose").Parse(string(templ))
 	if err != nil {
 		fmt.Println(err)
 		return
