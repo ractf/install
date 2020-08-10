@@ -1,4 +1,4 @@
-package main
+package install
 
 import (
 	"errors"
@@ -19,7 +19,7 @@ type options struct {
 	APIDomain         string
 }
 
-func main() {
+func RunWizard() {
 	fmt.Println(Cyan("Welcome to the"), Bold("RACTF"), Cyan("setup script"))
 
 	installOptions := options{}
@@ -58,7 +58,7 @@ func main() {
 }
 
 func generateAndWriteDockerFile(options options) {
-	tf, err := pkger.Open("/docker-compose.tmpl")
+	tf, err := pkger.Open("/assets/templates/docker-compose.tmpl")
 	if err != nil {
 		fmt.Println(err)
 	}
