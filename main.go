@@ -1,9 +1,11 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	. "github.com/logrusorgru/aurora"
 	"os"
+	"strings"
 	"text/template"
 )
 
@@ -39,12 +41,12 @@ func main() {
 	}
 
 	if installOptions.InstallComponents["Shell"] {
-		installOptions.EventName = promptString("What's the (short) name of your event (e.g. RACTF)?")
-		installOptions.APIDomain = promptString("What's the public URL of your API? (Don't include http(s) or a trailing slash, include a port if necessary)")
+		installOptions.EventName = promptString("What's the (short) name of your event (e.g. RACTF)?", stringValidator)
+		installOptions.APIDomain = promptString("What's the public URL of your API? (Don't include http(s) or a trailing slash, include a port if necessary)", partialDomainValidator)
 	}
 
 	if installOptions.InstallComponents["Core"] {
-		installOptions.FrontendURL = promptString("What URL will visitors access your site through? (Include http(s) and a trailing /)")
+		installOptions.FrontendURL = promptString("What URL will visitors access your site through? (Include http(s) and a trailing /)", fullDomainValidator)
 	}
 
 	installOptions.SecretKey = GenerateRandomString(64)
@@ -71,4 +73,31 @@ func generateAndWriteDockerFile(options options) {
 		fmt.Println(err)
 		return
 	}
+}
+
+func stringValidator(input string) error {
+	if len(input) == 0 {
+		return errors.New("input must be longer than one char")
+	}
+	return nil
+}
+
+func partialDomainValidator(input string) error {
+	if strings.HasPrefix(input, "http") {
+		return errors.New("string should not start with http")
+	}
+	if strings.HasSuffix(input, "/") {
+		return errors.New("string should not end with /")
+	}
+	return nil
+}
+
+func fullDomainValidator(input string) error {
+	if !strings.HasPrefix(input, "http") {
+		return errors.New("string should start with http")
+	}
+	if !strings.HasSuffix(input, "/") {
+		return errors.New("string should end with /")
+	}
+	return nil
 }
