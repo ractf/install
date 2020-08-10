@@ -11,6 +11,8 @@ type options struct {
 	EventName         string
 	InstallComponents map[string]bool
 	SecretKey         string
+	FrontendURL       string
+	APIDomain         string
 }
 
 func main() {
@@ -36,22 +38,35 @@ func main() {
 		return
 	}
 
-	installOptions.EventName = promptString("What's the (short) name of your event (e.g. RACTF)?")
+	if installOptions.InstallComponents["Shell"] {
+		installOptions.EventName = promptString("What's the (short) name of your event (e.g. RACTF)?")
+		installOptions.APIDomain = promptString("What's the public URL of your API? (Don't include http(s) or a trailing slash, include a port if necessary)")
+	}
+
+	if installOptions.InstallComponents["Core"] {
+		installOptions.FrontendURL = promptString("What URL will visitors access your site through? (Include http(s) and a trailing /)")
+	}
 
 	installOptions.SecretKey = GenerateRandomString(64)
 
 	fmt.Println(Green("Proceeding with installation of"), Bold(installCount), Green("components."))
-	generateDockerFile(installOptions)
+	generateAndWriteDockerFile(installOptions)
 }
 
-func generateDockerFile(options options) {
+func generateAndWriteDockerFile(options options) {
 	t, err := template.ParseFiles("docker-compose.tmpl")
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	err = t.Execute(os.Stdout, options)
+	f, err := os.Create("docker-compose.yaml")
+	if err != nil {
+		fmt.Println("create file: ", err)
+		return
+	}
+
+	err = t.Execute(f, options)
 	if err != nil {
 		fmt.Println(err)
 		return
