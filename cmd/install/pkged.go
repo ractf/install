@@ -2,7 +2,7 @@
 
 // +build !skippkger
 
-package install
+package main
 
 import (
 	"github.com/markbates/pkger"

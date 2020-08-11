@@ -1,4 +1,4 @@
-package install
+package main
 
 import (
 	"errors"
@@ -19,7 +19,7 @@ type options struct {
 	APIDomain         string
 }
 
-func RunWizard() {
+func main() {
 	fmt.Println(Cyan("Welcome to the"), Bold("RACTF"), Cyan("setup script"))
 
 	installOptions := options{}
