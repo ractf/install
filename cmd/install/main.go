@@ -51,11 +51,22 @@ func main() {
 
 	if installOptions.InstallComponents["Shell"] {
 		installOptions.EventName = promptString("What's the (short) name of your event (e.g. RACTF)?", stringValidator)
-		installOptions.APIDomain = promptString("What's the public URL of your API? (Don't include http(s) or a trailing slash, include a port if necessary)", partialDomainValidator)
+        apiDomain := promptString("What's the public URL of your API? (e.g https://api.ractf.co.uk/)", stringValidator)
+        apiDomain = strings.TrimPrefix(apiDomain, "https://")
+        apiDomain = strings.TrimPrefix(apiDomain, "http://")
+        apiDomain = strings.TrimRight(apiDomain, "/")
+        installOptions.APIDomain = apiDomain
 	}
 
 	if installOptions.InstallComponents["Core"] {
-		installOptions.FrontendURL = promptString("What URL will visitors access your site through? (Include http(s) and a trailing /)", fullDomainValidator)
+        frontendURL := promptString("What URL will visitors access your site through? (e.g. https://2020.ractf.co.uk/)", stringValidator)
+        if !strings.HasPrefix(frontendURL, "http") {
+            frontendURL = "https://" + frontendURL
+        }
+        if !strings.HasSuffix(frontendURL, "/") {
+            frontendURL += "/"
+        }
+        installOptions.FrontendURL = frontendURL
 	}
 
 	installOptions.SecretKey = GenerateRandomString(64)
@@ -143,26 +154,6 @@ func generateAndWriteDockerFile(options options) error {
 func stringValidator(input string) error {
 	if len(input) == 0 {
 		return errors.New("input must be longer than one char")
-	}
-	return nil
-}
-
-func partialDomainValidator(input string) error {
-	if strings.HasPrefix(input, "http") {
-		return errors.New("string should not start with http")
-	}
-	if strings.HasSuffix(input, "/") {
-		return errors.New("string should not end with /")
-	}
-	return nil
-}
-
-func fullDomainValidator(input string) error {
-	if !strings.HasPrefix(input, "http") {
-		return errors.New("string should start with http")
-	}
-	if !strings.HasSuffix(input, "/") {
-		return errors.New("string should end with /")
 	}
 	return nil
 }
