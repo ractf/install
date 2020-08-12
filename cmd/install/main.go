@@ -61,36 +61,83 @@ func main() {
 	installOptions.SecretKey = GenerateRandomString(64)
 
 	fmt.Println(Green("Proceeding with installation of"), Bold(installCount), Green("components."))
-	generateAndWriteDockerFile(installOptions)
+
+    err := generateAndWriteDockerFile(installOptions)
+    if err != nil {
+        fmt.Println(err)
+        return
+    }
+
+    err = generateAndWriteSystemdUnit(installOptions)
+    if err != nil {
+        fmt.Println(err)
+        return
+    }
+
+    fmt.Println(Green("Selected services successfully installed. Run"), Yellow("`systemctl enable ractf && systemctl start ractf`"), Green("to start the service."))
 }
 
-func generateAndWriteDockerFile(options options) {
+func generateAndWriteSystemdUnit(options options) error {
+    tf, err := pkger.Open("/assets/templates/systemd-unit.tmpl")
+    if err != nil {
+        return err
+    }
+    templ, err := ioutil.ReadAll(tf)
+    if err != nil {
+        return err
+    }
+
+    t, err := template.New("systemdUnit").Parse(string(templ))
+    if err != nil {
+        return err
+    }
+
+    f, err := os.Create("/etc/systemd/system/ractf.service")
+    if err != nil {
+        return err
+    }
+
+    err = t.Execute(f, options)
+    if err != nil {
+        return err
+    }
+
+    return nil
+}
+
+func generateAndWriteDockerFile(options options) error {
 	tf, err := pkger.Open("/assets/templates/docker-compose.tmpl")
 	if err != nil {
-		fmt.Println(err)
+		return err
 	}
 	templ, err := ioutil.ReadAll(tf)
 	if err != nil {
-		fmt.Println(err)
+		return err
 	}
 
 	t, err := template.New("dockerCompose").Parse(string(templ))
 	if err != nil {
-		fmt.Println(err)
-		return
+		return err
 	}
 
-	f, err := os.Create("docker-compose.yaml")
+    if _, err := os.Stat("/opt/ractf"); os.IsNotExist(err) {
+        err = os.Mkdir("/opt/ractf/", 0700)
+        if err != nil {
+            return err
+        }
+    }
+
+	f, err := os.Create("/opt/ractf/docker-compose.yaml")
 	if err != nil {
-		fmt.Println("create file: ", err)
-		return
+		return err
 	}
 
 	err = t.Execute(f, options)
 	if err != nil {
-		fmt.Println(err)
-		return
+		return err
 	}
+
+    return nil
 }
 
 func stringValidator(input string) error {
