@@ -1,4 +1,4 @@
-package install
+package main
 
 import (
 	"errors"
@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 	"text/template"
+	"runtime"
 )
 
 type options struct {
@@ -19,7 +20,13 @@ type options struct {
 	APIDomain         string
 }
 
-func RunWizard() {
+func main() {
+	if runtime.GOOS == "windows" {
+		fmt.Println("This script doesn't currently support windows.")
+		fmt.Println("Maybe with your help, it could! Contributions to this script are welcome at https://github.com/ractf/install")
+		return
+	}
+
 	fmt.Println(Cyan("Welcome to the"), Bold("RACTF"), Cyan("setup script"))
 
 	installOptions := options{}
