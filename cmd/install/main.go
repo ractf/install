@@ -85,7 +85,7 @@ func main() {
         return
     }
 
-    fmt.Println(Green("Selected services successfully installed. Run"), Yellow("`systemctl enable ractf && systemctl start ractf`"), Green("to start the service."))
+    fmt.Println(Green("Selected services successfully installed. Run"), Yellow("`systemctl enable --now ractf`"), Green("to start the service."))
 }
 
 func generateAndWriteSystemdUnit(options options) error {
