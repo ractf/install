@@ -81,7 +81,7 @@ func main() {
 
 	fmt.Println(Green("Proceeding with installation of"), Bold(installCount), Green("components."))
 
-	err := generateAndWriteDockerFile(installOptions)
+	err = generateAndWriteDockerFile(installOptions)
 	if err != nil {
 		fmt.Println(err)
 		return
