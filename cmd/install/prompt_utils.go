@@ -9,14 +9,14 @@ import (
 
 func promptString(promptMessage string, validate promptui.ValidateFunc) string {
 	prompt := promptui.Prompt{
-		Label: fmt.Sprintf("%s", Yellow(promptMessage)),
+		Label:    fmt.Sprintf("%s", Yellow(promptMessage)),
 		Validate: validate,
 	}
 
 	result, err := prompt.Run()
 
 	if err != nil {
-        fmt.Println(Red("Prompt failed to display:"), err)
+		fmt.Println(Red("Prompt failed to display:"), err)
 		return ""
 	}
 
@@ -51,7 +51,7 @@ func cumulativeSelect(prompt string, items []string) map[string]bool {
 		index, choice, err := prompt.Run()
 
 		if err != nil {
-            fmt.Println(Red("Prompt failed to display:"), err)
+			fmt.Println(Red("Prompt failed to display:"), err)
 			break
 		}
 
