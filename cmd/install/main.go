@@ -7,6 +7,7 @@ import (
 	"github.com/markbates/pkger"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"runtime"
 	"strings"
 	"text/template"
@@ -24,6 +25,13 @@ func main() {
 	if runtime.GOOS == "windows" {
 		fmt.Println("This script doesn't currently support windows.")
 		fmt.Println("Maybe with your help, it could! Contributions to this script are welcome at https://github.com/ractf/install")
+		return
+	}
+
+	_, err := exec.LookPath("/usr/bin/docker-compose")
+	if err != nil {
+		fmt.Println(Red("docker-compose, a dependency of this script, doesn't appear to be installed."))
+		fmt.Println(Red("If it is, ensure its executable is in /usr/bin/docker-compose."))
 		return
 	}
 
