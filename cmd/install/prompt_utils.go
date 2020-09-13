@@ -19,7 +19,7 @@ func promptString(promptMessage string, validate promptui.ValidateFunc) (string,
 		return "", err
 	}
 
-	return result, nil
+	return strings.TrimSpace(result), nil
 }
 
 func cumulativeSelect(prompt string, items []string) (map[string]bool, error) {
