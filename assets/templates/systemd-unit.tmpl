@@ -6,9 +6,9 @@ After=docker.service
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-WorkingDirectory=/opt/ractf
-ExecStart=/usr/bin/docker-compose up -d
-ExecStop=/usr/bin/docker-compose down
+WorkingDirectory=/opt/ractf/{{.InternalName}}
+ExecStart={{.ComposePath}} up -d
+ExecStop={{.ComposePath}} down
 TimeoutStartSec=0
 
 [Install]
