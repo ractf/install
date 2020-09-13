@@ -239,11 +239,11 @@ func stringValidator(input string) error {
 }
 
 func awsKeyValidator(input string) error {
-    input = strings.TrimSpace(input)
+	input = strings.TrimSpace(input)
 	match, _ := regexp.MatchString("[A-Z0-9]{20}", input)
-    if len(input) != 20 {
-        return errors.New("AWS Access Key ID should be of length 20")
-    }
+	if len(input) != 20 {
+		return errors.New("AWS Access Key ID should be of length 20")
+	}
 	if !match {
 		return errors.New("Invalid AWS Access key")
 	}
@@ -251,11 +251,11 @@ func awsKeyValidator(input string) error {
 }
 
 func awsSecretValidator(input string) error {
-    input = strings.TrimSpace(input)
+	input = strings.TrimSpace(input)
 	match, _ := regexp.MatchString("[A-Za-z0-9/+=]{40}", input)
-    if len(input) != 40 {
-        return errors.New("AWS Secret Key should be of length 40")
-    }
+	if len(input) != 40 {
+		return errors.New("AWS Secret Key should be of length 40")
+	}
 	if !match {
 		return errors.New("Invalid AWS Secret Key")
 	}
