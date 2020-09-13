@@ -42,6 +42,13 @@ func main() {
 		return
 	}
 
+	_, err = exec.LookPath("docker")
+	if err != nil {
+		fmt.Println(Red("docker, a dependency of this script, doesn't appear to be installed."))
+		fmt.Println(Red("If it is, ensure its executable is in the current user's PATH."))
+		return
+	}
+
 	installOptions.InstallComponents, err = cumulativeSelect("Which services would you like to install?", []string{"Andromeda", "Core", "Shell"})
 	if err != nil {
 		fmt.Println(Red("There was an error displaying a prompt."))
