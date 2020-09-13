@@ -97,6 +97,7 @@ func main() {
 		}
 	} else {
 		installOptions.EventName = *eventNameFlag
+		fmt.Println(Green(fmt.Sprintf("Event name set to %s by command-line flag.", *eventNameFlag)))
 	}
 	installOptions.InternalName = strings.Trim(strings.ReplaceAll(strings.ToLower(installOptions.EventName), " ", "_"), "./")
 
@@ -109,6 +110,7 @@ func main() {
 				return
 			}
 		} else {
+			fmt.Println(Green(fmt.Sprintf("API Domain set to %s by command-line flag.", *apiDomainFlag)))
 			apiDomain = *apiDomainFlag
 		}
 		apiDomain = strings.TrimPrefix(apiDomain, "https://")
@@ -126,6 +128,7 @@ func main() {
 				return
 			}
 		} else {
+			fmt.Println(Green(fmt.Sprintf("Frontend URL set to %s by command-line flag.", *frontendURLFlag)))
 			frontendURL = *frontendURLFlag
 		}
 		if !strings.HasPrefix(frontendURL, "http") {
