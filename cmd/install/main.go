@@ -239,7 +239,7 @@ func stringValidator(input string) error {
 }
 
 func awsKeyValidator(input string) error {
-	match, _ := regexp.MatchString("(?<![A-Z0-9])[A-Z0-9]{20}(?![A-Z0-9])", input)
+	match, _ := regexp.MatchString("[A-Z0-9]{20}", input)
 	if !match {
 		return errors.New("Invalid AWS Access key")
 	}
@@ -247,7 +247,7 @@ func awsKeyValidator(input string) error {
 }
 
 func awsSecretValidator(input string) error {
-	match, _ := regexp.MatchString("(?<![A-Za-z0-9/+=])[A-Za-z0-9/+=]{40}(?![A-Za-z0-9/+=])", input)
+	match, _ := regexp.MatchString("[A-Za-z0-9/+=]{40}", input)
 	if !match {
 		return errors.New("Invalid AWS Secret Key")
 	}
