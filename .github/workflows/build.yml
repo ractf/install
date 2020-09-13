@@ -51,3 +51,9 @@ jobs:
         asset_path: ./install
         asset_name: install
         asset_content_type: application/octet-stream
+
+    - name: Upload Install
+      uses: actions/upload-artifact@v2
+      with:
+        name: install
+        path: ./install

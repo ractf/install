@@ -7,7 +7,11 @@ import (
 	"strings"
 )
 
-func promptString(promptMessage string, validate promptui.ValidateFunc) string {
+func promptStringIfNotDefault(promptMessage string, validate promptui.ValidateFunc, defaultVal string) (string, error) {
+	if defaultVal != "" {
+		return defaultVal, nil
+	}
+
 	prompt := promptui.Prompt{
 		Label:    fmt.Sprintf("%s", Yellow(promptMessage)),
 		Validate: validate,
@@ -16,20 +20,21 @@ func promptString(promptMessage string, validate promptui.ValidateFunc) string {
 	result, err := prompt.Run()
 
 	if err != nil {
-		fmt.Println(Red("Prompt failed to display:"), err)
-		return ""
+		return "", err
 	}
 
-	return result
+	return strings.TrimSpace(result), nil
 }
 
-func cumulativeSelect(prompt string, items []string) map[string]bool {
+func cumulativeSelect(prompt string, items []string) (map[string]bool, error) {
 	selected := make(map[string]bool)
 	for _, v := range items {
 		selected[v] = false
 	}
 
 	items = append(items, "Confirm")
+
+	var lastCursorPos = 0
 
 	for {
 		var enabledList []string
@@ -46,21 +51,23 @@ func cumulativeSelect(prompt string, items []string) map[string]bool {
 			Label:        fmt.Sprintf("%s (Currently selected: %s)", Yellow(prompt), strings.Join(enabledList, ", ")),
 			Items:        items,
 			HideSelected: true,
+			CursorPos: lastCursorPos,
 		}
 
 		index, choice, err := prompt.Run()
 
 		if err != nil {
-			fmt.Println(Red("Prompt failed to display:"), err)
-			break
+			return nil, err
 		}
 
 		if index == len(items)-1 {
 			break
 		}
 
+		lastCursorPos = index
+
 		selected[choice] = !selected[choice]
 	}
 
-	return selected
+	return selected, nil
 }
