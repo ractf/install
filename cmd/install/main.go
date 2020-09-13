@@ -28,10 +28,10 @@ func main() {
 		return
 	}
 
-	_, err := exec.LookPath("/usr/bin/docker-compose")
+	_, err := exec.LookPath("docker-compose")
 	if err != nil {
 		fmt.Println(Red("docker-compose, a dependency of this script, doesn't appear to be installed."))
-		fmt.Println(Red("If it is, ensure its executable is in /usr/bin/docker-compose."))
+		fmt.Println(Red("If it is, ensure its executable is in the current user's PATH."))
 		return
 	}
 
