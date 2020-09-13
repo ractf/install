@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func promptString(promptMessage string, validate promptui.ValidateFunc) string {
+func promptString(promptMessage string, validate promptui.ValidateFunc) (string, error) {
 	prompt := promptui.Prompt{
 		Label:    fmt.Sprintf("%s", Yellow(promptMessage)),
 		Validate: validate,
@@ -16,14 +16,13 @@ func promptString(promptMessage string, validate promptui.ValidateFunc) string {
 	result, err := prompt.Run()
 
 	if err != nil {
-		fmt.Println(Red("Prompt failed to display:"), err)
-		return ""
+		return "", err
 	}
 
-	return result
+	return result, nil
 }
 
-func cumulativeSelect(prompt string, items []string) map[string]bool {
+func cumulativeSelect(prompt string, items []string) (map[string]bool, error) {
 	selected := make(map[string]bool)
 	for _, v := range items {
 		selected[v] = false
@@ -51,8 +50,7 @@ func cumulativeSelect(prompt string, items []string) map[string]bool {
 		index, choice, err := prompt.Run()
 
 		if err != nil {
-			fmt.Println(Red("Prompt failed to display:"), err)
-			break
+			return nil, err
 		}
 
 		if index == len(items)-1 {
@@ -62,5 +60,5 @@ func cumulativeSelect(prompt string, items []string) map[string]bool {
 		selected[choice] = !selected[choice]
 	}
 
-	return selected
+	return selected, nil
 }

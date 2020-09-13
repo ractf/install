@@ -39,7 +39,11 @@ func main() {
 
 	installOptions := options{}
 
-	installOptions.InstallComponents = cumulativeSelect("Which services would you like to install?", []string{"Andromeda", "Core", "Shell"})
+	installOptions.InstallComponents, err = cumulativeSelect("Which services would you like to install?", []string{"Andromeda", "Core", "Shell"})
+	if err != nil {
+		fmt.Println(Red("There was an error displaying a prompt."))
+		return
+	}
 
 	var installCount int
 	for _, v := range installOptions.InstallComponents {
@@ -58,8 +62,16 @@ func main() {
 	}
 
 	if installOptions.InstallComponents["Shell"] {
-		installOptions.EventName = promptString("What's the (short) name of your event (e.g. RACTF)?", stringValidator)
-		apiDomain := promptString("What's the public URL of your API? (e.g https://api.ractf.co.uk/)", stringValidator)
+		installOptions.EventName, err = promptString("What's the (short) name of your event (e.g. RACTF)?", stringValidator)
+		if err != nil {
+			fmt.Println(Red("There was an error displaying a prompt."))
+			return
+		}
+		apiDomain, err := promptString("What's the public URL of your API? (e.g https://api.ractf.co.uk/)", stringValidator)
+		if err != nil {
+			fmt.Println(Red("There was an error displaying a prompt."))
+			return
+		}
 		apiDomain = strings.TrimPrefix(apiDomain, "https://")
 		apiDomain = strings.TrimPrefix(apiDomain, "http://")
 		apiDomain = strings.TrimRight(apiDomain, "/")
@@ -67,7 +79,11 @@ func main() {
 	}
 
 	if installOptions.InstallComponents["Core"] {
-		frontendURL := promptString("What URL will visitors access your site through? (e.g. https://2020.ractf.co.uk/)", stringValidator)
+		frontendURL, err := promptString("What URL will visitors access your site through? (e.g. https://2020.ractf.co.uk/)", stringValidator)
+		if err != nil {
+			fmt.Println(Red("There was an error displaying a prompt."))
+			return
+		}
 		if !strings.HasPrefix(frontendURL, "http") {
 			frontendURL = "https://" + frontendURL
 		}
