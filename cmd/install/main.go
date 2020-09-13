@@ -15,13 +15,16 @@ import (
 )
 
 type options struct {
-	EventName         string
-	InstallComponents map[string]bool
-	SecretKey         string
-	FrontendURL       string
-	APIDomain         string
-	InternalName      string
-	ComposePath       string
+	EventName          string
+	InstallComponents  map[string]bool
+	SecretKey          string
+	FrontendURL        string
+	APIDomain          string
+	InternalName       string
+	ComposePath        string
+	UserEmail          string
+	AWSAccessKeyId     string
+	AWSSecretAccessKey string
 }
 
 var installShellFlag = flag.Bool("shell", false, "Whether to install Shell")
@@ -30,6 +33,10 @@ var installAndromedaFlag = flag.Bool("andromeda", false, "Whether to install And
 var eventNameFlag = flag.String("eventname", "", "The name of the event")
 var frontendURLFlag = flag.String("frontendurl", "", "The public URL of your shell instance")
 var apiDomainFlag = flag.String("apidomain", "", "The public URL of your core instance")
+var userEmailFlag = flag.String("email", "", "The email sent to LetsEncrypt for certificate provisioning")
+var AWSAccessKeyIdFlag = flag.String("awsaccesskeyid", "", "AWS Acess Key ID (For mail)")
+var AWSSecretAccessKeyFlag = flag.String("awsaccesskeysecret", "", "AWS Secret Access Key (For mail)")
+
 
 func main() {
 	flag.Parse()
@@ -96,6 +103,12 @@ func main() {
 	}
 	installOptions.InternalName = strings.Trim(strings.ReplaceAll(strings.ToLower(installOptions.EventName), " ", "_"), "./")
 
+	installOptions.UserEmail, err = promptStringIfNotDefault("Which email should be sent to LetsEncrypt for certificate provisioning (Use one you control)?", stringValidator, *userEmailFlag)
+	if err != nil {
+		fmt.Println(Red("There was an error displaying a prompt."))
+		return
+	}
+
 	if installOptions.InstallComponents["Shell"] {
 		apiDomain, err := promptStringIfNotDefault("What's the public URL of your API? (e.g https://api.ractf.co.uk/)", stringValidator, *apiDomainFlag)
 		if err != nil {
@@ -108,19 +121,21 @@ func main() {
 		installOptions.APIDomain = apiDomain
 	}
 
-	if installOptions.InstallComponents["Core"] {
-		frontendURL, err := promptStringIfNotDefault("What URL will visitors access your site through? (e.g. https://2020.ractf.co.uk/)", stringValidator, *frontendURLFlag)
-		if err != nil {
-			fmt.Println(Red("There was an error displaying a prompt."))
-			return
-		}
-		if !strings.HasPrefix(frontendURL, "http") {
-			frontendURL = "https://" + frontendURL
-		}
-		if !strings.HasSuffix(frontendURL, "/") {
-			frontendURL += "/"
-		}
-		installOptions.FrontendURL = frontendURL
+	frontendURL, err := promptStringIfNotDefault("What URL will visitors access your site through? (e.g. https://2020.ractf.co.uk/)", stringValidator, *frontendURLFlag)
+	if err != nil {
+		fmt.Println(Red("There was an error displaying a prompt."))
+		return
+	}
+	frontendURL = strings.TrimPrefix(frontendURL, "https://")
+	frontendURL = strings.TrimPrefix(frontendURL, "http://")
+	frontendURL = strings.TrimRight(frontendURL, "/")
+	installOptions.FrontendURL = frontendURL
+
+	installOptions.AWSAccessKeyId, err = promptStringIfNotDefault("AWS Access Key ID for mail?", stringValidator, *AWSAccessKeyIdFlag)
+	installOptions.AWSSecretAccessKey, err = promptStringIfNotDefault("AWS Secret Access Key ID for mail?", stringValidator, *AWSSecretAccessKeyFlag)
+	if err != nil {
+		fmt.Println(Red("There was an error displaying a prompt."))
+		return
 	}
 
 	installOptions.SecretKey = GenerateRandomString(64)

@@ -1,64 +1,165 @@
 version: "3"
 
 services:
-  {{if index .InstallComponents "Core"}}
-  redis:
-    image: redis:5
+  traefik:
+    image: "traefik:v2.2"
+    restart: "always"
+    container_name: "traefik"
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.http.address=:80"
+      - "--entrypoints.https.address=:443"
+      - "--api.dashboard=true"
+      - "--certificatesresolvers.resolver.acme.httpchallenge=true"
+      - "--certificatesresolvers.resolver.acme.httpchallenge.entrypoint=http"
+      - "--certificatesresolvers.resolver.acme.email={{.UserEmail}}"
+      - "--entrypoints.http.http.redirections.entryPoint.to=https"
+      - "--entrypoints.http.http.redirections.entryPoint.scheme=https"
+      - "--entrypoints.http.http.redirections.entrypoint.permanent=true"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+    - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    depends_on:
+    {{if index .InstallComponents "Shell"}}- "shell"{{end}}
+    {{if index .InstallComponents "Core"}}- "web"{{end}}
+    labels:
+    - "com.centurylinklabs.watchtower.enable"
 
-  database:
-    image: postgres:12-alpine
-    environment:
-      - POSTGRES_EXTENSIONS=citext
-      - POSTGRES_HOST_AUTH_METHOD=trust
-  {{end}}
   {{if index .InstallComponents "Shell"}}
   shell:
     image: ractf/shell
-    ports:
-      - "8000:8000"
+    restart: "always"
     environment:
       - RACTF_API_BASE=/api/v2
       - RACTF_USE_HEAD_NAV=true
       - RACTF_SITE_NAME={{.EventName}}
       - RACTF_API_DOMAIN=https://{{.APIDomain}}
       - RACTF_WSS_URL=wss://{{.APIDomain}}/api/v2/ws/
-    {{if index .InstallComponents "Core"}}
-    depends_on:
-      - backend
-      - sockets
-    {{end}}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.shell.rule=Host(`{{.FrontendURL}}`)"
+      - "traefik.http.routers.shell.entrypoints=https"
+      - "traefik.http.routers.shell.tls.certresolver=resolver"
+      - "com.centurylinklabs.watchtower.enable"
+      - "traefik.http.routers.shell.tls=true"
   {{end}}
-  {{if index .InstallComponents "Core"}}
-  backend: &backend
-    image: ractf/core
-    entrypoint: /app/entrypoints/backend.sh
-    command: gunicorn -w 12 -b 0.0.0.0:8000 backend.wsgi:application
-    environment:
-      - LOAD_FIXTURES=0
-      - FRONTEND_URL={{.FrontendURL}}
-      - SECRET_KEY={{.SecretKey}}
-      - DJANGO_SETTINGS_MODULE=backend.settings.local
 
-      - ANDROMEDA_IP=andromeda
-      - ANDROMEDA_URL=http://andromeda:6000
+  watchtower:
+    image: containrrr/watchtower
+    command:
+      - "--label-enable"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --interval 15
+    labels:
+    - "com.centurylinklabs.watchtower.enable"
+
+  {{if index .InstallComponents "Core"}}
+  web: &core
+    image: ractf/core
+    command: bash -c "./manage.py migrate && gunicorn -w 12 -b 0.0.0.0:8000 backend.wsgi:application"
+    restart: always
+    environment:
+      - DOMAIN={{.APIDomain}}
+      - FRONTEND_URL=https://{{.FrontendURL}}/
+      - SECRET_KEY={{.SecretKey}}
+      - DJANGO_SETTINGS_MODULE=backend.settings.production
+
+      # Andromeda stuff would go here
 
       - REDIS_PORT=6379
+      - REDIS_CONFIG_DB=1
+      - REDIS_CACHE_DB=2
       - REDIS_HOST=redis
-      - REDIS_CONFIG_DB=3
-      - REDIS_CACHE_DB=10
 
       - SQL_PORT=5432
-      - SQL_HOST=database
-      - SQL_USER=postgres
-      - SQL_DATABASE=postgres
+      - SQL_USER=ractf
+      - SQL_HOST=postgres
+      - SQL_DATABASE=ractf
+      - SQL_PASSWORD=password
 
+      - AWS_DEFAULT_REGION=eu-west-2
+      - AWS_ACCESS_KEY_ID={{.AWSAccessKeyId}}
+      - AWS_SECRET_ACCESS_KEY={{.AWSSecretAccessKey}}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`{{.APIDomain}}`) && PathPrefix(`/api/v2`)"
+      - "traefik.http.routers.backend.entrypoints=https"
+      - "traefik.http.routers.backend.tls.certresolver=resolver"
+      - "traefik.http.middlewares.stripbackend.stripprefix.prefixes=/api/v2"
+      - "traefik.http.routers.backend.middlewares=stripbackend@docker"
+      - "com.centurylinklabs.watchtower.enable"
+      - "traefik.http.routers.backend.tls=true"
     depends_on:
-      - database
+    - postgres
+    - redis
 
-  sockets:
-    <<: *backend
-    entrypoint: /app/entrypoints/sockets.sh
+  redis:
+    image: "redis:5"
+    restart: "always"
+    volumes:
+      - redis:/data
+    labels:
+    - "com.centurylinklabs.watchtower.enable"
+
+  postgres:
+    image: postgres:12-alpine
+    restart: "always"
+    environment:
+      - POSTGRES_EXTENSIONS=citext
+      - POSTGRES_HOST_AUTH_METHOD=trust
+      - POSTGRES_DB=ractf
+      - POSTGRES_USER=ractf
+    volumes:
+      - postgres:/var/lib/postgresql/data/
+    labels:
+    - "com.centurylinklabs.watchtower.enable"
+
+  websockets:
+    image: ractf/core
     command: daphne -b 0.0.0.0 -p 8000 backend.asgi:application
+    restart: always
+    environment:
+      - DOMAIN=api.beano.dev
+      - FRONTEND_URL=https://ractf.beano.dev/
+      - SECRET_KEY=ZJmURZV1Oj8A0rsoUZRgw9YKGwyk7kTe
+      - DJANGO_SETTINGS_MODULE=backend.settings.production
+
+      # Andromeda stuff would go here
+
+      - REDIS_PORT=6379
+      - REDIS_CONFIG_DB=1
+      - REDIS_CACHE_DB=2
+      - REDIS_HOST=redis
+
+      - SQL_PORT=5432
+      - SQL_USER=ractf
+      - SQL_HOST=postgres
+      - SQL_DATABASE=ractf
+      - SQL_PASSWORD=password
+
+      - AWS_DEFAULT_REGION=eu-west-2
+      - AWS_ACCESS_KEY_ID={{.AWSAccessKeyId}}
+      - AWS_SECRET_ACCESS_KEY={{.AWSSecretAccessKey}}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.websockets.rule=Host(`api.beano.dev`) && PathPrefix(`/api/v2/ws`)"
+      - "traefik.http.routers.websockets.entrypoints=https"
+      - "traefik.http.routers.websockets.tls.certresolver=resolver"
+      - "traefik.http.middlewares.stripwebsockets.stripprefix.prefixes=/api/v2"
+      - "traefik.http.routers.websockets.middlewares=stripwebsockets@docker"
+      - "com.centurylinklabs.watchtower.enable"
+      - "traefik.http.routers.websockets.tls=true"
     depends_on:
-      - backend
+    - postgres
+    - redis
+    - web
+
   {{end}}
+
+volumes:
+  redis:
+  postgres:
