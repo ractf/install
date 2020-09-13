@@ -8,7 +8,7 @@ import (
 )
 
 func promptStringIfNotDefault(promptMessage string, validate promptui.ValidateFunc, defaultVal string) (string, error) {
-	if defaultVal == "" {
+	if defaultVal != "" {
 		return defaultVal, nil
 	}
 
@@ -34,6 +34,8 @@ func cumulativeSelect(prompt string, items []string) (map[string]bool, error) {
 
 	items = append(items, "Confirm")
 
+	var lastCursorPos = 0
+
 	for {
 		var enabledList []string
 		for i, v := range selected {
@@ -49,6 +51,7 @@ func cumulativeSelect(prompt string, items []string) (map[string]bool, error) {
 			Label:        fmt.Sprintf("%s (Currently selected: %s)", Yellow(prompt), strings.Join(enabledList, ", ")),
 			Items:        items,
 			HideSelected: true,
+			CursorPos: lastCursorPos,
 		}
 
 		index, choice, err := prompt.Run()
@@ -60,6 +63,8 @@ func cumulativeSelect(prompt string, items []string) (map[string]bool, error) {
 		if index == len(items)-1 {
 			break
 		}
+
+		lastCursorPos = index
 
 		selected[choice] = !selected[choice]
 	}
