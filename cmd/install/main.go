@@ -4,14 +4,16 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	. "github.com/logrusorgru/aurora"
-	"github.com/markbates/pkger"
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"regexp"
 	"runtime"
 	"strings"
 	"text/template"
+
+	. "github.com/logrusorgru/aurora"
+	"github.com/markbates/pkger"
 )
 
 type options struct {
@@ -36,7 +38,6 @@ var apiDomainFlag = flag.String("apidomain", "", "The public URL of your core in
 var userEmailFlag = flag.String("email", "", "The email sent to LetsEncrypt for certificate provisioning")
 var AWSAccessKeyIdFlag = flag.String("awsaccesskeyid", "", "AWS Acess Key ID (For mail)")
 var AWSSecretAccessKeyFlag = flag.String("awsaccesskeysecret", "", "AWS Secret Access Key (For mail)")
-
 
 func main() {
 	flag.Parse()
@@ -74,9 +75,15 @@ func main() {
 		}
 	} else {
 		var install = make(map[string]bool)
-		if *installCoreFlag {install["Core"] = true}
-		if *installShellFlag {install["Shell"] = true}
-		if *installAndromedaFlag {install["Andromeda"] = true}
+		if *installCoreFlag {
+			install["Core"] = true
+		}
+		if *installShellFlag {
+			install["Shell"] = true
+		}
+		if *installAndromedaFlag {
+			install["Andromeda"] = true
+		}
 		installOptions.InstallComponents = install
 	}
 
@@ -131,8 +138,8 @@ func main() {
 	frontendURL = strings.TrimRight(frontendURL, "/")
 	installOptions.FrontendURL = frontendURL
 
-	installOptions.AWSAccessKeyId, err = promptStringIfNotDefault("AWS Access Key ID for mail?", stringValidator, *AWSAccessKeyIdFlag)
-	installOptions.AWSSecretAccessKey, err = promptStringIfNotDefault("AWS Secret Access Key ID for mail?", stringValidator, *AWSSecretAccessKeyFlag)
+	installOptions.AWSAccessKeyId, err = promptStringIfNotDefault("AWS Access Key ID for mail?", awsKeyValidator, *AWSAccessKeyIdFlag)
+	installOptions.AWSSecretAccessKey, err = promptStringIfNotDefault("AWS Secret Access Key ID for mail?", awsSecretValidator, *AWSSecretAccessKeyFlag)
 	if err != nil {
 		fmt.Println(Red("There was an error displaying a prompt."))
 		return
@@ -227,6 +234,22 @@ func generateAndWriteDockerFile(options options) error {
 func stringValidator(input string) error {
 	if len(input) == 0 {
 		return errors.New("input must be longer than one char")
+	}
+	return nil
+}
+
+func awsKeyValidator(input string) error {
+	match, _ := regexp.MatchString("(?<![A-Z0-9])[A-Z0-9]{20}(?![A-Z0-9])", input)
+	if !match {
+		return errors.New("Invalid AWS Access key")
+	}
+	return nil
+}
+
+func awsSecretValidator(input string) error {
+	match, _ := regexp.MatchString("(?<![A-Za-z0-9/+=])[A-Za-z0-9/+=]{40}(?![A-Za-z0-9/+=])", input)
+	if !match {
+		return errors.New("Invalid AWS Secret Key")
 	}
 	return nil
 }
