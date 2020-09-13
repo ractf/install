@@ -7,7 +7,11 @@ import (
 	"strings"
 )
 
-func promptString(promptMessage string, validate promptui.ValidateFunc) (string, error) {
+func promptStringIfNotDefault(promptMessage string, validate promptui.ValidateFunc, defaultVal string) (string, error) {
+	if defaultVal == "" {
+		return defaultVal, nil
+	}
+
 	prompt := promptui.Prompt{
 		Label:    fmt.Sprintf("%s", Yellow(promptMessage)),
 		Validate: validate,

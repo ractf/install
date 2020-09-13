@@ -89,29 +89,18 @@ func main() {
 		return
 	}
 
-	if *eventNameFlag == "" {
-		installOptions.EventName, err = promptString("What's the (short) name of your event (e.g. RACTF)?", stringValidator)
-		if err != nil {
-			fmt.Println(Red("There was an error displaying a prompt."))
-			return
-		}
-	} else {
-		installOptions.EventName = *eventNameFlag
-		fmt.Println(Green(fmt.Sprintf("Event name set to %s by command-line flag.", *eventNameFlag)))
+	installOptions.EventName, err = promptStringIfNotDefault("What's the (short) name of your event (e.g. RACTF)?", stringValidator, *eventNameFlag)
+	if err != nil {
+		fmt.Println(Red("There was an error displaying a prompt."))
+		return
 	}
 	installOptions.InternalName = strings.Trim(strings.ReplaceAll(strings.ToLower(installOptions.EventName), " ", "_"), "./")
 
 	if installOptions.InstallComponents["Shell"] {
-		var apiDomain string
-		if *apiDomainFlag == "" {
-			apiDomain, err = promptString("What's the public URL of your API? (e.g https://api.ractf.co.uk/)", stringValidator)
-			if err != nil {
-				fmt.Println(Red("There was an error displaying a prompt."))
-				return
-			}
-		} else {
-			fmt.Println(Green(fmt.Sprintf("API Domain set to %s by command-line flag.", *apiDomainFlag)))
-			apiDomain = *apiDomainFlag
+		apiDomain, err := promptStringIfNotDefault("What's the public URL of your API? (e.g https://api.ractf.co.uk/)", stringValidator, *apiDomainFlag)
+		if err != nil {
+			fmt.Println(Red("There was an error displaying a prompt."))
+			return
 		}
 		apiDomain = strings.TrimPrefix(apiDomain, "https://")
 		apiDomain = strings.TrimPrefix(apiDomain, "http://")
@@ -120,16 +109,10 @@ func main() {
 	}
 
 	if installOptions.InstallComponents["Core"] {
-		var frontendURL string
-		if *frontendURLFlag == "" {
-			frontendURL, err = promptString("What URL will visitors access your site through? (e.g. https://2020.ractf.co.uk/)", stringValidator)
-			if err != nil {
-				fmt.Println(Red("There was an error displaying a prompt."))
-				return
-			}
-		} else {
-			fmt.Println(Green(fmt.Sprintf("Frontend URL set to %s by command-line flag.", *frontendURLFlag)))
-			frontendURL = *frontendURLFlag
+		frontendURL, err := promptStringIfNotDefault("What URL will visitors access your site through? (e.g. https://2020.ractf.co.uk/)", stringValidator, *frontendURLFlag)
+		if err != nil {
+			fmt.Println(Red("There was an error displaying a prompt."))
+			return
 		}
 		if !strings.HasPrefix(frontendURL, "http") {
 			frontendURL = "https://" + frontendURL
