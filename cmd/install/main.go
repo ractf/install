@@ -157,8 +157,8 @@ func main() {
 	}
 
 	fmt.Println(Green("Selected services successfully installed."))
-	fmt.Println(Blue(strings.Repeat("-", 20)))
-	fmt.Println(Red("What you still need to do (if you haven't already!):"))
+	fmt.Println(Blue(strings.Repeat("-", 30)))
+	fmt.Println(Yellow("What you still need to do (if you haven't already!):"))
 	fmt.Println(" - ", Green("Set your DNS so that the requisite domains point to this box"))
 	fmt.Println(" - ", Green("Run"), Yellow(fmt.Sprintf("`systemctl enable --now ractf_%s`", installOptions.InternalName)), Green("to start the RACTF service on this box."))
 }
