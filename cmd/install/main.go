@@ -27,6 +27,7 @@ type options struct {
 	UserEmail          string
 	AWSAccessKeyId     string
 	AWSSecretAccessKey string
+	UseWatchtower      bool
 }
 
 var installShellFlag = flag.Bool("shell", false, "Whether to install Shell")
@@ -38,6 +39,7 @@ var apiDomainFlag = flag.String("apidomain", "", "The public URL of your core in
 var userEmailFlag = flag.String("email", "", "The email sent to LetsEncrypt for certificate provisioning")
 var AWSAccessKeyIdFlag = flag.String("awsaccesskeyid", "", "AWS Acess Key ID (For mail)")
 var AWSSecretAccessKeyFlag = flag.String("awsaccesskeysecret", "", "AWS Secret Access Key (For mail)")
+var UseWatchtowerFlag = flag.Bool("usewatchtower", false, "Whether to use Watchtower to auto-update RACTF.")
 
 func main() {
 	flag.Parse()
@@ -146,6 +148,7 @@ func main() {
 	}
 
 	installOptions.SecretKey = GenerateRandomString(64)
+	installOptions.UseWatchtower = *UseWatchtowerFlag
 
 	fmt.Println(Green("Proceeding with installation of"), Bold(installCount), Green("components."))
 
@@ -165,7 +168,7 @@ func main() {
 	fmt.Println(Blue(strings.Repeat("-", 30)))
 	fmt.Println(Yellow("What you still need to do (if you haven't already!):"))
 	fmt.Println(" - ", Green("Set your DNS so that the requisite domains point to this box"))
-	fmt.Println(" - ", Green("Run"), Yellow(fmt.Sprintf("`systemctl enable --now ractf_%s`", installOptions.InternalName)), Green("to start the RACTF service on this box."))
+	fmt.Println(" - ", Green("Run"), Yellow(fmt.Sprintf("`systemctl enable --now ractf_%s`", installOptions.InternalName)), Green("to start the RACTF service on this box."), Red("(This might take a while on first run!)"))
 }
 
 func generateAndWriteSystemdUnit(options options) error {
