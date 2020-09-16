@@ -118,17 +118,15 @@ func main() {
 		return
 	}
 
-	if installOptions.InstallComponents["Shell"] {
-		apiDomain, err := promptStringIfNotDefault("What's the public URL of your API? (e.g https://api.ractf.co.uk/)", stringValidator, *apiDomainFlag)
-		if err != nil {
-			fmt.Println(Red("There was an error displaying a prompt."))
-			return
-		}
-		apiDomain = strings.TrimPrefix(apiDomain, "https://")
-		apiDomain = strings.TrimPrefix(apiDomain, "http://")
-		apiDomain = strings.TrimRight(apiDomain, "/")
-		installOptions.APIDomain = apiDomain
+	apiDomain, err := promptStringIfNotDefault("What's the public URL of your API? (e.g https://api.ractf.co.uk/)", stringValidator, *apiDomainFlag)
+	if err != nil {
+		fmt.Println(Red("There was an error displaying a prompt."))
+		return
 	}
+	apiDomain = strings.TrimPrefix(apiDomain, "https://")
+	apiDomain = strings.TrimPrefix(apiDomain, "http://")
+	apiDomain = strings.TrimRight(apiDomain, "/")
+	installOptions.APIDomain = apiDomain
 
 	frontendURL, err := promptStringIfNotDefault("What URL will visitors access your site through? (e.g. https://2020.ractf.co.uk/)", stringValidator, *frontendURLFlag)
 	if err != nil {
