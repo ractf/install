@@ -1,32 +1,33 @@
-version: "3"
+version: '3'
 
 services:
   traefik:
-    image: "traefik:v2.2"
-    restart: "always"
-    container_name: "traefik"
+    image: 'traefik:v2.2'
+    restart: always
+    container_name: traefik
     command:
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--entrypoints.http.address=:80"
-      - "--entrypoints.https.address=:443"
-      - "--api.dashboard=true"
-      - "--certificatesresolvers.resolver.acme.httpchallenge=true"
-      - "--certificatesresolvers.resolver.acme.httpchallenge.entrypoint=http"
-      - "--certificatesresolvers.resolver.acme.email={{.UserEmail}}"
-      - "--entrypoints.http.http.redirections.entryPoint.to=https"
-      - "--entrypoints.http.http.redirections.entryPoint.scheme=https"
-      - "--entrypoints.http.http.redirections.entrypoint.permanent=true"
+      - '--providers.docker=true'
+      - '--providers.docker.exposedbydefault=false'
+      - '--entrypoints.http.address=:80'
+      - '--entrypoints.https.address=:443'
+      - '--api.dashboard=true'
+      - '--certificatesresolvers.resolver.acme.httpchallenge=true'
+      - '--certificatesresolvers.resolver.acme.httpchallenge.entrypoint=http'
+      - '--certificatesresolvers.resolver.acme.email={{.UserEmail}}'
+      - '--entrypoints.http.http.redirections.entryPoint.to=https'
+      - '--entrypoints.http.http.redirections.entryPoint.scheme=https'
+      - '--entrypoints.http.http.redirections.entrypoint.permanent=true'
     ports:
-      - "80:80"
-      - "443:443"
+      - '80:80'
+      - '443:443'
     volumes:
-    - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - '/var/run/docker.sock:/var/run/docker.sock:ro'
+      - 'acme:/etc/traefik/acme'
     depends_on:
     {{if index .InstallComponents "Shell"}}- "shell"{{end}}
     {{if index .InstallComponents "Core"}}- "web"{{end}}
     labels:
-    - "com.centurylinklabs.watchtower.enable"
+      - com.centurylinklabs.watchtower.enable
 
   {{if index .InstallComponents "Shell"}}
   shell:
@@ -47,119 +48,157 @@ services:
       - "traefik.http.routers.shell.tls=true"
   {{end}}
 
+  {{if index .InstallComponents "Updates"}}
   watchtower:
     image: containrrr/watchtower
     command:
-      - "--label-enable"
+      - '--label-enable'
+      - '--interval 15'
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    command: --interval 15
+      - '/var/run/docker.sock:/var/run/docker.sock'
     labels:
-    - "com.centurylinklabs.watchtower.enable"
+      - com.centurylinklabs.watchtower.enable
+  {{end}}
 
   {{if index .InstallComponents "Core"}}
-  web: &core
+  web:
     image: ractf/core
-    command: bash -c "./manage.py migrate && gunicorn -w 12 -b 0.0.0.0:8000 backend.wsgi:application"
+    command: >-
+      bash -c "./manage.py migrate && gunicorn -w 12 -b 0.0.0.0:8000
+      backend.wsgi:application"
     restart: always
     environment:
       - DOMAIN={{.APIDomain}}
-      - FRONTEND_URL=https://{{.FrontendURL}}/
-      - SECRET_KEY={{.SecretKey}}
+      - 'FRONTEND_URL=https://{{.FrontendURL}}/'
+      - >-
+        SECRET_KEY={{.SecretKey}}
       - DJANGO_SETTINGS_MODULE=backend.settings.production
-
-      # Andromeda stuff would go here
-
+      - 'ANDROMEDA_URL=http://andromeda:6000'
+      - ANDROMEDA_API_KEY={{.AndromedaKey}}
       - REDIS_PORT=6379
       - REDIS_CONFIG_DB=1
       - REDIS_CACHE_DB=2
       - REDIS_HOST=redis
-
       - SQL_PORT=5432
       - SQL_USER=ractf
       - SQL_HOST=postgres
       - SQL_DATABASE=ractf
       - SQL_PASSWORD=password
-
       - AWS_DEFAULT_REGION=eu-west-2
       - AWS_ACCESS_KEY_ID={{.AWSAccessKeyId}}
       - AWS_SECRET_ACCESS_KEY={{.AWSSecretAccessKey}}
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=Host(`{{.APIDomain}}`) && PathPrefix(`/api/v2`)"
-      - "traefik.http.routers.backend.entrypoints=https"
-      - "traefik.http.routers.backend.tls.certresolver=resolver"
-      - "traefik.http.middlewares.stripbackend.stripprefix.prefixes=/api/v2"
-      - "traefik.http.routers.backend.middlewares=stripbackend@docker"
-      - "com.centurylinklabs.watchtower.enable"
-      - "traefik.http.routers.backend.tls=true"
+      - traefik.enable=true
+      - >-
+        traefik.http.routers.backend.rule=Host(`{{.APIDomain}}`) &&
+        PathPrefix(`/api/v2`)
+      - traefik.http.routers.backend.entrypoints=https
+      - traefik.http.routers.backend.tls.certresolver=resolver
+      - traefik.http.middlewares.stripbackend.stripprefix.prefixes=/api/v2
+      - traefik.http.routers.backend.middlewares=stripbackend@docker
+      - com.centurylinklabs.watchtower.enable
+      - traefik.http.routers.backend.tls=true
     depends_on:
-    - postgres
-    - redis
+      - postgres
+      - redis
+      {{if index .InstallComponents "Andromeda"}}- "andromeda"{{end}}
 
   redis:
-    image: "redis:5"
-    restart: "always"
+    image: 'redis:5'
+    restart: always
     volumes:
-      - redis:/data
+      - 'redis:/data'
     labels:
-    - "com.centurylinklabs.watchtower.enable"
+      - com.centurylinklabs.watchtower.enable
 
   postgres:
-    image: postgres:12-alpine
-    restart: "always"
+    image: 'postgres:12-alpine'
+    restart: always
     environment:
       - POSTGRES_EXTENSIONS=citext
       - POSTGRES_HOST_AUTH_METHOD=trust
       - POSTGRES_DB=ractf
       - POSTGRES_USER=ractf
     volumes:
-      - postgres:/var/lib/postgresql/data/
+      - 'postgres:/var/lib/postgresql/data/'
     labels:
-    - "com.centurylinklabs.watchtower.enable"
+      - com.centurylinklabs.watchtower.enable
 
   websockets:
     image: ractf/core
-    command: daphne -b 0.0.0.0 -p 8000 backend.asgi:application
+    command: 'daphne -b 0.0.0.0 -p 8000 backend.asgi:application'
     restart: always
     environment:
-      - DOMAIN=api.beano.dev
-      - FRONTEND_URL=https://ractf.beano.dev/
-      - SECRET_KEY=ZJmURZV1Oj8A0rsoUZRgw9YKGwyk7kTe
+      - DOMAIN={{.APIDomain}}
+      - 'FRONTEND_URL=https://{{.FrontendURL}}/'
+      - >-
+        SECRET_KEY={{.SecretKey}}
       - DJANGO_SETTINGS_MODULE=backend.settings.production
-
-      # Andromeda stuff would go here
-
+      - 'ANDROMEDA_URL=http://andromeda:6000'
+      - ANDROMEDA_API_KEY={{.AndromedaKey}}
       - REDIS_PORT=6379
       - REDIS_CONFIG_DB=1
       - REDIS_CACHE_DB=2
       - REDIS_HOST=redis
-
       - SQL_PORT=5432
       - SQL_USER=ractf
       - SQL_HOST=postgres
       - SQL_DATABASE=ractf
       - SQL_PASSWORD=password
-
       - AWS_DEFAULT_REGION=eu-west-2
       - AWS_ACCESS_KEY_ID={{.AWSAccessKeyId}}
       - AWS_SECRET_ACCESS_KEY={{.AWSSecretAccessKey}}
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.websockets.rule=Host(`api.beano.dev`) && PathPrefix(`/api/v2/ws`)"
-      - "traefik.http.routers.websockets.entrypoints=https"
-      - "traefik.http.routers.websockets.tls.certresolver=resolver"
-      - "traefik.http.middlewares.stripwebsockets.stripprefix.prefixes=/api/v2"
-      - "traefik.http.routers.websockets.middlewares=stripwebsockets@docker"
-      - "com.centurylinklabs.watchtower.enable"
-      - "traefik.http.routers.websockets.tls=true"
+      - traefik.enable=true
+      - >-
+        traefik.http.routers.websockets.rule=Host(`{{.APIDomain}}`) &&
+        PathPrefix(`/api/v2/ws`)
+      - traefik.http.routers.websockets.entrypoints=https
+      - traefik.http.routers.websockets.tls.certresolver=resolver
+      - traefik.http.middlewares.stripwebsockets.stripprefix.prefixes=/api/v2
+      - traefik.http.routers.websockets.middlewares=stripwebsockets@docker
+      - com.centurylinklabs.watchtower.enable
+      - traefik.http.routers.websockets.tls=true
     depends_on:
-    - postgres
-    - redis
-    - web
+      - postgres
+      - redis
+      - web
+      {{if index .InstallComponents "Andromeda"}}- "andromeda"{{end}}
 
+  errors:
+    image: ractf/error-handler
+    restart: always
+    labels:
+      - com.centurylinklabs.watchtower.enable
+      - traefik.enable=true
+      - traefik.http.routers.error-router.rule=Host(`{{.APIDomain}}`)
+      - traefik.http.routers.error-router.entrypoints=https
+      - traefik.http.routers.error-router.tls.certresolver=resolver
   {{end}}
 
+  {{if index .InstallComponents "Andromeda"}}
+  andromeda:
+    image: ractf/andromeda
+    restart: always
+    command: andromedad -e
+    environment:
+      - ANDROMEDA_BIND_IP=0.0.0.0
+      - ANDROMEDA_PUBLIC_IP={{.AndromedaIP}}
+      - ANDROMEDA_API_IP=0.0.0.0
+      - ANDROMEDA_API_PORT=6000
+      - ANDROMEDA_PORT_MIN=10000
+      - ANDROMEDA_PORT_MAX=12000
+      - ANDROMEDA_API_KEY={{.AndromedaKey}}
+    volumes:
+      - 'andromeda:/opt/andromeda/'
+      - '/var/run/docker.sock:/var/run/docker.sock'
+    labels:
+      - com.centurylinklabs.watchtower.enable
+  {{end}}
+
+
 volumes:
-  redis:
-  postgres:
+  redis: null
+  postgres: null
+  andromeda: null
+  acme: null
