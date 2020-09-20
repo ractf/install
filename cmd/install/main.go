@@ -28,6 +28,8 @@ type options struct {
 	AWSAccessKeyId     string
 	AWSSecretAccessKey string
 	UseWatchtower      bool
+	AndromedaIp        string
+	AndromedaKey       string
 }
 
 var installShellFlag = flag.Bool("shell", false, "Whether to install Shell")
@@ -40,6 +42,7 @@ var userEmailFlag = flag.String("email", "", "The email sent to LetsEncrypt for 
 var AWSAccessKeyIdFlag = flag.String("awsaccesskeyid", "", "AWS Acess Key ID (For mail)")
 var AWSSecretAccessKeyFlag = flag.String("awsaccesskeysecret", "", "AWS Secret Access Key (For mail)")
 var UseWatchtowerFlag = flag.Bool("usewatchtower", false, "Whether to use Watchtower to auto-update RACTF.")
+var AndromedaIPFlag = flag.String("andromedaip", "", "IP users access challenges through")
 
 func main() {
 	flag.Parse()
@@ -134,6 +137,13 @@ func main() {
 	frontendURL = strings.TrimRight(frontendURL, "/")
 	installOptions.FrontendURL = frontendURL
 
+	andromedaIP, err := promptStringIfNotDefault("What IP/hostname will users access challenges through? (e.g. 1.1.1.1)", stringValidator, *AndromedaIPFlag)
+	if err != nil {
+		fmt.Println(Red("There was an error displaying a prompt."))
+		return
+	}
+	installOptions.AndromedaIp = andromedaIP
+
 	installOptions.AWSAccessKeyId, err = promptStringIfNotDefault("AWS Access Key ID for mail?", awsKeyValidator, *AWSAccessKeyIdFlag)
 	installOptions.AWSSecretAccessKey, err = promptStringIfNotDefault("AWS Secret Access Key ID for mail?", awsSecretValidator, *AWSSecretAccessKeyFlag)
 	if err != nil {
@@ -142,6 +152,7 @@ func main() {
 	}
 
 	installOptions.SecretKey = GenerateRandomString(64)
+	installOptions.AndromedaKey = GenerateRandomString(64)
 	installOptions.UseWatchtower = *UseWatchtowerFlag
 
 	fmt.Println(Green("Proceeding with installation of"), Bold(installCount), Green("components."))
