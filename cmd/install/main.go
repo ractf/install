@@ -92,7 +92,7 @@ func main() {
 	var installCount int
 	for _, v := range installOptions.InstallComponents {
 		if v {
-			installCount += 1
+			installCount++
 		}
 	}
 
