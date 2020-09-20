@@ -100,10 +100,6 @@ func main() {
 		fmt.Println(Red("You must select at least one service to continue."))
 		return
 	}
-	if installOptions.InstallComponents["Andromeda"] {
-		fmt.Println(Red("Andromeda install is not currently supported by this script."))
-		return
-	}
 
 	installOptions.EventName, err = promptStringIfNotDefault("What's the (short) name of your event (e.g. RACTF)?", stringValidator, *eventNameFlag)
 	if err != nil {
