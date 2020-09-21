@@ -28,7 +28,7 @@ type options struct {
 	AWSAccessKeyId     string
 	AWSSecretAccessKey string
 	UseWatchtower      bool
-	AndromedaIp        string
+	AndromedaIP        string
 	AndromedaKey       string
 }
 
@@ -142,7 +142,7 @@ func main() {
 		fmt.Println(Red("There was an error displaying a prompt."))
 		return
 	}
-	installOptions.AndromedaIp = andromedaIP
+	installOptions.AndromedaIP = andromedaIP
 
 	installOptions.AWSAccessKeyId, err = promptStringIfNotDefault("AWS Access Key ID for mail?", awsKeyValidator, *AWSAccessKeyIdFlag)
 	installOptions.AWSSecretAccessKey, err = promptStringIfNotDefault("AWS Secret Access Key ID for mail?", awsSecretValidator, *AWSSecretAccessKeyFlag)
