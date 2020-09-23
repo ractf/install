@@ -4,6 +4,7 @@ import (
 	"fmt"
 	. "github.com/logrusorgru/aurora"
 	"github.com/manifoldco/promptui"
+	"os"
 	"strings"
 )
 
@@ -24,6 +25,15 @@ func promptStringIfNotDefault(promptMessage string, validate promptui.ValidateFu
 	}
 
 	return strings.TrimSpace(result), nil
+}
+
+func mustPromptStringIfNotDefault(promptMessage string, validate promptui.ValidateFunc, defaultVal string) string {
+	result, err := promptStringIfNotDefault(promptMessage, validate, defaultVal)
+	if err != nil {
+		fmt.Println(promptError)
+		os.Exit(0)
+	}
+	return result
 }
 
 func cumulativeSelect(prompt string, items []string) (map[string]bool, error) {
@@ -51,7 +61,7 @@ func cumulativeSelect(prompt string, items []string) (map[string]bool, error) {
 			Label:        fmt.Sprintf("%s (Currently selected: %s)", Yellow(prompt), strings.Join(enabledList, ", ")),
 			Items:        items,
 			HideSelected: true,
-			CursorPos: lastCursorPos,
+			CursorPos:    lastCursorPos,
 		}
 
 		index, choice, err := prompt.Run()
