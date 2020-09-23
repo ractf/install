@@ -37,6 +37,7 @@ type options struct {
 	EmailServer        string
 	EmailUser          string
 	EmailPass          string
+	EmailSSL           bool
 }
 
 var installShellFlag = flag.Bool("shell", false, "Whether to install Shell")
@@ -46,13 +47,13 @@ var eventNameFlag = flag.String("eventname", "", "The name of the event")
 var frontendURLFlag = flag.String("frontendurl", "", "The public URL of your shell instance")
 var apiDomainFlag = flag.String("apidomain", "", "The public URL of your core instance")
 var userEmailFlag = flag.String("email", "", "The email sent to LetsEncrypt for certificate provisioning")
-var emailModeFlag = flag.String("emailmode", "smtp", "How emails should be sent - SMTP, SES or Sendgrid")
 var AWSAccessKeyIdFlag = flag.String("awsaccesskeyid", "", "AWS Acess Key ID (For mail)")
 var AWSSecretAccessKeyFlag = flag.String("awsaccesskeysecret", "", "AWS Secret Access Key (For mail)")
 var sendgridApiKeyFlag = flag.String("sendgridapikey", "", "Sendgrid API Key")
 var emailServerFlag = flag.String("smtpserver", "", "SMTP Server")
 var emailUserFlag = flag.String("smtpuser", "", "SMTP User")
-var emailPassFlag = flag.String("smptpass", "", "SMTP Password")
+var emailPassFlag = flag.String("smtpass", "", "SMTP Password")
+var emailSSLFlag = flag.Bool("smtpssl", false, "SMTP SSL")
 var useWatchtowerFlag = flag.Bool("usewatchtower", false, "Whether to use Watchtower to auto-update RACTF.")
 var andromedaIPFlag = flag.String("andromedaip", "", "IP users access challenges through")
 
@@ -168,10 +169,22 @@ func main() {
 			installOptions.EmailServer = mustPromptStringIfNotDefault("SMTP Server?", stringValidator, *emailServerFlag)
 			installOptions.EmailUser = mustPromptStringIfNotDefault("SMTP Username?", stringValidator, *emailUserFlag)
 			installOptions.EmailPass = mustPromptStringIfNotDefault("SMTP Password?", stringValidator, *emailPassFlag)
+			//Is this a bad idea? Almost certainly, but it's 3am and I'm not figuring out a better way
+			if !(*installShellFlag || *installCoreFlag || *installAndromedaFlag) {
+				sslPrompt := promptui.Prompt{
+					Label:     fmt.Sprintf("%s", Yellow("Use SSL for SMTP?")),
+					IsConfirm: true,
+				}
+				ssl, err := sslPrompt.Run()
+				if err != nil {
+					fmt.Println(promptError)
+					return
+				}
+				installOptions.EmailSSL = ssl == "Y"
+			} else {
+				installOptions.EmailSSL = *emailSSLFlag
+			}
 		}
-	}
-
-	if installOptions.EmailMode == "AWS" {
 	}
 
 	installOptions.SecretKey = GenerateRandomString(64)

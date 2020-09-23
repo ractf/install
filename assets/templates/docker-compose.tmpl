@@ -165,6 +165,9 @@ services:
       - EMAIL_SERVER={{.EmailServer}}
       - EMAIL_USER={{.EmailUser}}
       - EMAIL_PASS={{.EmailPass}}
+      {{if .EmailSSL}}
+      - EMAIL_SSL=1
+      {{end}}
       {{end}}
     labels:
       - traefik.enable=true
