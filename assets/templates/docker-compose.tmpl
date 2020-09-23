@@ -89,9 +89,9 @@ services:
       - AWS_DEFAULT_REGION=eu-west-2
       - AWS_ACCESS_KEY_ID={{.AWSAccessKeyId}}
       - AWS_SECRET_ACCESS_KEY={{.AWSSecretAccessKey}}
-      {{else if eq .EmailMode "sendgrid"}}
+      {{else if eq .EmailMode "SENDGRID"}}
       - SENDGRID_API_KEY={{.SendgridAPIKey}}
-      {{else if eq .EmailMode "smtp"}}
+      {{else if eq .EmailMode "SMTP"}}
       - EMAIL_SERVER={{.EmailServer}}
       - EMAIL_USER={{.EmailUser}}
       - EMAIL_PASS={{.EmailPass}}
@@ -154,9 +154,18 @@ services:
       - SQL_HOST=postgres
       - SQL_DATABASE=ractf
       - SQL_PASSWORD=password
+      - EMAIL_PROVIDER={{.EmailMode}}
+      {{if eq .EmailMode "AWS"}}
       - AWS_DEFAULT_REGION=eu-west-2
       - AWS_ACCESS_KEY_ID={{.AWSAccessKeyId}}
       - AWS_SECRET_ACCESS_KEY={{.AWSSecretAccessKey}}
+      {{else if eq .EmailMode "SENDGRID"}}
+      - SENDGRID_API_KEY={{.SendgridAPIKey}}
+      {{else if eq .EmailMode "SMTP"}}
+      - EMAIL_SERVER={{.EmailServer}}
+      - EMAIL_USER={{.EmailUser}}
+      - EMAIL_PASS={{.EmailPass}}
+      {{end}}
     labels:
       - traefik.enable=true
       - >-
