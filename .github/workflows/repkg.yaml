@@ -21,6 +21,9 @@ jobs:
 
     - name: Install pkger
       run: go get github.com/markbates/pkger/cmd/pkger
+    
+    - name: Delete old assets
+      run: rm cmd/install/pkged.go
 
     - name: Repackage Assets
       run: pkger
