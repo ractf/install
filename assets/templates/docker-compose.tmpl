@@ -22,7 +22,7 @@ services:
       - '443:443'
     volumes:
       - '/var/run/docker.sock:/var/run/docker.sock:ro'
-      - 'acme:/etc/traefik/acme'
+      - 'acme:/acme.json'
     depends_on:
     {{if index .InstallComponents "Shell"}}- "shell"{{end}}
     {{if index .InstallComponents "Core"}}- "web"{{end}}
