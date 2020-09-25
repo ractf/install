@@ -1,0 +1,41 @@
+name: Repackage Assets
+
+on: push
+
+jobs:
+  run:
+    name: Repackage Assets
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Checkout Repository
+      uses: actions/checkout@master
+
+    - uses: benjlevesque/short-sha@v1.1
+      id: short-sha
+      with:
+        length: 6
+
+    - name: Setup Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: '1.14'
+
+    - name: Verify Go version
+      run: go version
+
+    - name: Install pkger
+      run: go get github.com/markbates/pkger/cmd/pkger
+
+    - name: Repackage Assets
+      run: pkger && mv pkged.go ./cmd/install/pkged.go && sed 's/install/main' ./cmd/install/pkged.go
+
+    - name: Commit Changes
+      uses: EndBug/add-and-commit@v5
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        author_name: Github Automation
+        author_email: actions@github.com
+        message: "Repackage assets"
+        add: "cmd/install/pkged.go"
