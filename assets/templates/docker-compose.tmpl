@@ -22,7 +22,7 @@ services:
       - '443:443'
     volumes:
       - '/var/run/docker.sock:/var/run/docker.sock:ro'
-      - 'acme:/acme.json'
+      - '/opt/acme.json:/acme.json'
     depends_on:
     {{if index .InstallComponents "Shell"}}- "shell"{{end}}
     {{if index .InstallComponents "Core"}}- "web"{{end}}
@@ -222,4 +222,3 @@ volumes:
   redis: null
   postgres: null
   andromeda: null
-  acme: null
