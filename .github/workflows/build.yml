@@ -11,7 +11,7 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@master
 
-    - uses: benjlevesque/short-sha@v1.1
+    - uses: benjlevesque/short-sha@v1.2
       id: short-sha
       with:
         length: 6
