@@ -4,7 +4,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/manifoldco/promptui"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -12,6 +11,8 @@ import (
 	"runtime"
 	"strings"
 	"text/template"
+
+	"github.com/manifoldco/promptui"
 
 	. "github.com/logrusorgru/aurora"
 	"github.com/markbates/pkger"
@@ -200,6 +201,19 @@ func main() {
 	}
 
 	err = generateAndWriteSystemdUnit(installOptions)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	emptyFile, err := os.Create("/opt/acme.json")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	emptyFile.Close()
+
+	err = os.Chmod("/opt/acme.json", 600)
 	if err != nil {
 		fmt.Println(err)
 		return
